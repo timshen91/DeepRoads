@@ -60,6 +60,8 @@ timer_handler:
 	iret
 
 spurious_handler:
+	mov $APIC+EOI, %edi
+	movl $0, (%edi)
 	iret
 
 str:
