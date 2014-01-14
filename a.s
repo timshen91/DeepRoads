@@ -26,7 +26,6 @@ _start:
 
 	mov $APIC+TIMER_LVT, %eax
 	movl $0x20020, (%eax)
-	jmp idle
 
 idle:
 	jmp idle
@@ -53,12 +52,11 @@ putchar:
 	pop %ax
 	ret
 
-
 timer_handler:
 	mov $'A', %dl
 	call putchar
-	mov $APIC+EOI, %eax
-	movl $0, (%eax)
+	mov $APIC+EOI, %edi
+	movl $0, (%edi)
 	iret
 
 spurious_handler:
