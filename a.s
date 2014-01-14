@@ -31,19 +31,19 @@ _start:
 idle:
 	jmp idle
 
-//puts:
-//	push %eax
-//	mov %edi, %eax
-//	puts_1b:
-//		mov (%eax), %dl
-//		cmp $0, %dl
-//		jz puts_1f
-//		call putchar
-//		inc %eax
-//		jmp puts_1b
-//	puts_1f:
-//	pop %eax
-//	ret
+#puts:
+#	push %eax
+#	mov %edi, %eax
+#	puts_1b:
+#		mov (%eax), %dl
+#		cmp $0, %dl
+#		jz puts_1f
+#		call putchar
+#		inc %eax
+#		jmp puts_1b
+#	puts_1f:
+#	pop %eax
+#	ret
 
 putchar:
 	push %ax
