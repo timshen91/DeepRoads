@@ -19,9 +19,10 @@ loop:
 	mov %cr0, %eax
 	or $1, %eax
 	movl %eax, %cr0
-	.byte	0x66, 0xea
-	.long	next
-	.word	8
+# Steal from Linux
+	.byte 0x66, 0xea
+	.long next
+	.word 8
 
 .code32
 next:
