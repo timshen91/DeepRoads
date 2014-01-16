@@ -1,9 +1,23 @@
 .code16
 .global _start
 
+SYS_SEC_SIZE = 1
 IDT_SIZE = 256
 
 _start:
+# copy main to 0x7e00
+	mov $DAP, %ebx
+	sub $0x7c00, %ebx
+	mov %bx, %si
+	mov $0x7c0, %ax
+	mov %ax, %ds
+	mov $0x42, %ah
+	mov $0x80, %dl
+	int $0x13
+	mov $0, %ax
+	mov %ax, %ds
+
+# fill IDT
 	mov $0x80000, %ebx
 	mov $dummy_handler, %bx
 	mov $dummy_handler, %ecx
@@ -17,12 +31,13 @@ loop:
 	cmp $idt, %eax
 	jnz loop
 
+# switch to protected mode
 	lgdt lgdt_op
 	cli
 	mov %cr0, %eax
 	or $1, %eax
 	movl %eax, %cr0
-# Steal from Linux
+# steal from Linux
 	.byte 0x66, 0xea
 	.long next
 	.word 8
@@ -39,8 +54,14 @@ next:
 	mov $0x6ffc, %esp
 	sti
 
-idle:
-	jmp idle
+	jmp 0x7e00
+
+DAP:
+	.byte 0x10
+	.byte 0
+	.word SYS_SEC_SIZE
+	.word 0, 0x7e0
+	.quad 1
 
 .align 8
 gdt:

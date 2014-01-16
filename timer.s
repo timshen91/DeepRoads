@@ -1,5 +1,4 @@
-.code16
-.global _start
+.global set_timer
 
 APIC = 0xfee00000
 DCR = 0x3e0
@@ -10,7 +9,7 @@ SVR = 0x0f0
 TIMER_LVT = 0x320
 ERROR = 0x280
 
-_start:
+set_timer:
 	mov $128, %eax
 	movl $timer_handler, (%eax)
 	movl $spurious_handler, 4(%eax)
@@ -27,8 +26,7 @@ _start:
 	mov $APIC+TIMER_LVT, %eax
 	movl $0x20020, (%eax)
 
-idle:
-	jmp idle
+	ret
 
 putchar:
 	push %ax
