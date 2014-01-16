@@ -1,68 +1,56 @@
 .code16
 .global _start
 
-APIC = 0xfee00000
-DCR = 0x3e0
-ICR = 0x380
-CCR = 0x390
-EOI = 0x0b0
-SVR = 0x0f0
-TIMER_LVT = 0x320
-ERROR = 0x280
-
 _start:
-	mov $128, %eax
-	movl $timer_handler, (%eax)
-	movl $spurious_handler, 4(%eax)
+	mov $0x80000, %ebx
+	mov $dummy_handler, %bx
+	mov $dummy_handler, %ecx
+	mov $0x8e00, %cx
+	mov $0x7800, %eax
+loop:
+	subl $8, %eax
+	mov %ebx, (%eax)
+	mov %ecx, 4(%eax)
+	cmp $7000, %eax
+	jnz loop
 
-	mov $APIC+ICR, %eax
-	movl $1000000, (%eax)
+	lgdt lgdt_op
+	cli
+	mov %cr0, %eax
+	or $1, %eax
+	movl %eax, %cr0
+	.byte	0x66, 0xea
+	.long	next
+	.word	8
 
-	mov $APIC+DCR, %eax
-	movl $0x0, (%eax)
-
-	mov $APIC+SVR, %eax
-	movl $0x121, (%eax)
-
-	mov $APIC+TIMER_LVT, %eax
-	movl $0x20020, (%eax)
+.code32
+next:
+	lidt lidt_op
+	mov $16, %ecx
+	mov %ecx, %ds
+	mov %ecx, %es
+	mov %ecx, %fs
+	mov %ecx, %gs
+	mov %ecx, %ss
+	mov $0x6ffc, %esp
+	sti
 
 idle:
 	jmp idle
 
-#puts:
-#	push %eax
-#	mov %edi, %eax
-#	puts_1b:
-#		mov (%eax), %dl
-#		cmp $0, %dl
-#		jz puts_1f
-#		call putchar
-#		inc %eax
-#		jmp puts_1b
-#	puts_1f:
-#	pop %eax
-#	ret
+.align 8
+gdt:
+	.quad 0
+	.quad 0x00CF9A000000FFFF
+	.quad 0x00CF92000000FFFF
 
-putchar:
-	push %ax
-	mov $0x0e, %ah
-	mov %dl, %al
-	int $0x10
-	pop %ax
-	ret
+lgdt_op:
+	.word 23
+	.long gdt
 
-timer_handler:
-	mov $'A', %dl
-	call putchar
-	mov $APIC+EOI, %edi
-	movl $0, (%edi)
+lidt_op:
+	.word 255
+	.long 0x7000
+
+dummy_handler:
 	iret
-
-spurious_handler:
-	mov $APIC+EOI, %edi
-	movl $0, (%edi)
-	iret
-
-str:
-	.string "hello, world\r\n"
