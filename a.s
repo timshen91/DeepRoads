@@ -1,17 +1,20 @@
 .code16
 .global _start
 
+IDT_SIZE = 256
+
 _start:
 	mov $0x80000, %ebx
 	mov $dummy_handler, %bx
 	mov $dummy_handler, %ecx
 	mov $0x8e00, %cx
-	mov $0x7800, %eax
+	mov $idt, %eax
+	add $IDT_SIZE, %eax
 loop:
 	subl $8, %eax
 	mov %ebx, (%eax)
 	mov %ecx, 4(%eax)
-	cmp $7000, %eax
+	cmp $idt, %eax
 	jnz loop
 
 	lgdt lgdt_op
@@ -45,13 +48,17 @@ gdt:
 	.quad 0x00CF9A000000FFFF
 	.quad 0x00CF92000000FFFF
 
+.align 8
+idt:
+	.zero IDT_SIZE
+
 lgdt_op:
 	.word 23
 	.long gdt
 
 lidt_op:
-	.word 255
-	.long 0x7000
+	.word IDT_SIZE-1
+	.long idt
 
 dummy_handler:
 	iret
