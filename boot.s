@@ -2,7 +2,6 @@
 .global _start
 
 SYS_SEC_SIZE = 1
-IDT_SIZE = 256
 
 _start:
 # copy main to 0x7e00
@@ -17,26 +16,11 @@ _start:
 	mov $0, %ax
 	mov %ax, %ds
 
-# fill IDT
-	mov $0x80000, %ebx
-	mov $dummy_handler, %bx
-	mov $dummy_handler, %ecx
-	mov $0x8e00, %cx
-	mov $idt, %eax
-	add $IDT_SIZE, %eax
-loop:
-	subl $8, %eax
-	mov %ebx, (%eax)
-	mov %ecx, 4(%eax)
-	cmp $idt, %eax
-	jnz loop
-
 # switch to protected mode
 	lgdt lgdt_op
 	cli
-	mov %cr0, %eax
-	or $1, %eax
-	movl %eax, %cr0
+	mov $1, %eax
+	mov %eax, %cr0
 # steal from Linux
 	.byte 0x66, 0xea
 	.long next
@@ -44,16 +28,56 @@ loop:
 
 .code32
 next:
-	lidt lidt_op
-	mov $16, %ecx
-	mov %ecx, %ds
-	mov %ecx, %es
-	mov %ecx, %fs
-	mov %ecx, %gs
-	mov %ecx, %ss
-	mov $0x6ffc, %esp
-	sti
+	mov $16, %eax
+	mov %eax, %ds
+	mov %eax, %es
+	mov %eax, %fs
+	mov %eax, %gs
+	mov %eax, %ss
 
+	mov $0x20, %eax
+	mov %eax, %cr4
+
+	mov $0, %eax
+	mov %eax, %cr3
+
+	//IA32_EFER.LME = 1
+	mov $0xc0000080, %ecx
+	rdmsr
+	or $0x100, %eax
+	wrmsr
+
+	mov $0, %eax
+	movl $0x1009, (%eax)
+	movl $0, 4(%eax)
+
+	mov $0x1000, %eax
+	movl $0x2009, (%eax)
+	movl $0, 4(%eax)
+
+	mov $0x2000, %eax
+	movl $0x3009, (%eax)
+	movl $0, 4(%eax)
+
+	mov $0x3000 + 7*8, %eax
+	movl $0x7009, (%eax)
+	movl $0, 4(%eax)
+
+	mov $0x3000 + 7*8, %eax
+	movl $0x7009, (%eax)
+	movl $0, 4(%eax)
+
+	// for stack
+	mov $0x3000 + 0x1ff*8, %eax
+	movl $0x1ff009, (%eax)
+	movl $0, 4(%eax)
+
+	//CR0.PG = 1
+	mov %cr0, %eax
+	or $0x80000000, %eax
+	mov %eax, %cr0
+
+	mov $0x1ffffc, %esp
 	jmp 0x7e00
 
 DAP:
@@ -69,17 +93,6 @@ gdt:
 	.quad 0x00CF9A000000FFFF
 	.quad 0x00CF92000000FFFF
 
-.align 8
-idt:
-	.zero IDT_SIZE
-
 lgdt_op:
 	.word 23
 	.long gdt
-
-lidt_op:
-	.word IDT_SIZE-1
-	.long idt
-
-dummy_handler:
-	iret
