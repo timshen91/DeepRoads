@@ -48,30 +48,27 @@ next:
 	or $0x100, %eax
 	wrmsr
 
+	mov $0x4000, %eax
+loop:
+	sub $4, %eax
+	movl $0, (%eax)
+	cmp $0, %eax
+	jnz loop
+
 	// level 4
-	mov $0, %eax
-	movl $0x1009, (%eax)
-	movl $0, 4(%eax)
+	movl $0x1009, 0
 
 	// level 3
-	mov $0x1000, %eax
-	movl $0x2009, (%eax)
-	movl $0, 4(%eax)
+	movl $0x2009, 0x1000
 
 	// level 2
-	mov $0x2000, %eax
-	movl $0x3009, (%eax)
-	movl $0, 4(%eax)
+	movl $0x3009, 0x2000
 
-	// level 1
-	mov $0x3000 + 7*8, %eax
-	movl $0x7009, (%eax)
-	movl $0, 4(%eax)
+	// 0x7xxx
+	movl $0x7009, 0x3000 + 7*8
 
-	// for stack
-	mov $0x3000 + 0x1ff*8, %eax
-	movl $0x1ff009, (%eax)
-	movl $0, 4(%eax)
+	// stack
+	movl $0x1ff009, 0x3000 + 0x1ff*8
 
 	//CR0.PG = 1
 	mov %cr0, %eax
