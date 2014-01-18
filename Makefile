@@ -14,4 +14,4 @@ compile:
 clean:
 	rm -f *.o image main.s
 
-.PHONY: all clean b
+.PHONY: all clean debug compile
