@@ -1,9 +1,10 @@
 .code16
-.global _start
 
 SYS_SEC_SIZE = 1
 
-_start:
+.section bootsect
+.global boot
+boot:
 # copy main to 0x7e00
 	mov $DAP, %ebx
 	sub $0x7c00, %ebx
@@ -47,22 +48,22 @@ next:
 	or $0x100, %eax
 	wrmsr
 
+	// level 4
 	mov $0, %eax
 	movl $0x1009, (%eax)
 	movl $0, 4(%eax)
 
+	// level 3
 	mov $0x1000, %eax
 	movl $0x2009, (%eax)
 	movl $0, 4(%eax)
 
+	// level 2
 	mov $0x2000, %eax
 	movl $0x3009, (%eax)
 	movl $0, 4(%eax)
 
-	mov $0x3000 + 7*8, %eax
-	movl $0x7009, (%eax)
-	movl $0, 4(%eax)
-
+	// level 1
 	mov $0x3000 + 7*8, %eax
 	movl $0x7009, (%eax)
 	movl $0, 4(%eax)
@@ -78,7 +79,7 @@ next:
 	mov %eax, %cr0
 
 	mov $0x1ffffc, %esp
-	jmp 0x7e00
+	jmp main
 
 DAP:
 	.byte 0x10
@@ -96,3 +97,5 @@ gdt:
 lgdt_op:
 	.word 23
 	.long gdt
+.org 510
+.byte 0x55, 0xaa

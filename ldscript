@@ -1,0 +1,9 @@
+SECTIONS {
+	. = 0x7c00;
+	.text : { *(.section bootsect) }
+	.text : { *(.text) }
+	.data : { *(.data) }
+	.bss : { *(.bss) }
+}
+
+ENTRY(boot)
